@@ -15,14 +15,17 @@ import org.slf4j.LoggerFactory;
 /**
  * This class is used to send notification to user in cases when balance changes
  * dramatically or previous notification had been send too old.<br/>
- * Properties file must contains <code>login</code> and <code>password</code>.<br/>
+ * Properties file must contains
+ * <code>login</code> and
+ * <code>password</code>.<br/>
  * For example:<br/>
  * <code>
  * login=123456<br/>
  * password=XXXXXX<br/>
  * </code>
  * <br/>
- * Properties file path is specified with system property <code>balanceChekerPropertiesFile</code>. For example:<br/>
+ * Properties file path is specified with system property
+ * <code>balanceChekerPropertiesFile</code>. For example:<br/>
  * <code>java -DbalanceChekerPropertiesFile=/tmp/balanceChecker.properties -jar %JAR_NAME%</code>
  *
  * @author spitty
@@ -42,7 +45,6 @@ public class BalanceNotifier {
     //
     private static final String DEFAULT_NOTIFICATION_STEP = "10";
     private static final String DEFAULT_NOTIFICATION_TIMEOUT = "3600000";
-
     private Properties prop;
     private String propFilename;
     private BalanceChecker balanceChecker;
@@ -84,8 +86,9 @@ public class BalanceNotifier {
     }
 
     /**
-     * It is used to check current balance and show a notification if 
-     * required conditions are passed.
+     * It is used to check current balance and show a notification if required
+     * conditions are passed.
+     *
      * @throws IOException if some error occurs
      */
     public void process() throws IOException {
@@ -151,13 +154,16 @@ public class BalanceNotifier {
             prop.put(NOTIFICATION_TIMEOUT_PROP_KEY, DEFAULT_NOTIFICATION_TIMEOUT);
         }
         Long notificationTimeout = Long.valueOf(prop.getProperty(NOTIFICATION_TIMEOUT_PROP_KEY));
-        final double limitValue = lastCheckedValue - notificationStep;
+        final double minLimitValue = lastCheckedValue - notificationStep;
+        final double maxLimitValue = lastCheckedValue + notificationStep;
         final long limitTime = lastCheckTime + notificationTimeout;
 
-        if (balance <= limitValue
+        if (balance <= minLimitValue || balance >= maxLimitValue
                 || currentTime >= limitTime) {
-            if (balance <= limitValue) {
-                LOGGER.info("Balance value \"{}\" exceeded limit value \"{}\"", balance, limitValue);
+            if (balance <= minLimitValue) {
+                LOGGER.info("Balance value \"{}\" exceeded limit value \"{}\"", balance, minLimitValue);
+            } else if (balance >= maxLimitValue) {
+                LOGGER.info("Balance value \"{}\" exceeded limit value \"{}\"", balance, maxLimitValue);
             } else {
                 LOGGER.info("Time value \"{}\" exceeded limit time value \"{}\"", currentTime, limitTime);
             }
@@ -166,7 +172,7 @@ public class BalanceNotifier {
         }
         LOGGER.info("Given values (Balance = {}, Time = {}) do not exceed "
                 + "limit values (Limit balance = {}, Limit time = {})",
-                balance, currentTime, limitValue, limitTime);
+                balance, currentTime, minLimitValue, limitTime);
     }
 
     private void notifyAndStore(Double balance, Long currentTime) {
