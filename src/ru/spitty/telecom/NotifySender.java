@@ -8,18 +8,20 @@ import java.io.IOException;
 import org.slf4j.LoggerFactory;
 
 /**
- *
+ * This class is used for send notifications via <a href="http://manpages.ubuntu.com/manpages/precise/en/man1/notify-send.1.html">notify-send</a>
+ * 
  * @author spitty
  */
 public class NotifySender {
 
     private static final org.slf4j.Logger LOGGER = LoggerFactory.getLogger(NotifySender.class);
 
-    public static void main(String[] args) {
-        final String message = "Hello";
-        sendNotification(message);
-    }
-
+    /**
+     * Send a notification via 
+     * <a href="http://manpages.ubuntu.com/manpages/precise/en/man1/notify-send.1.html">notify-send</a>
+     * 
+     * @param message {@link String} message to be shown
+     */
     public static void sendNotification(final String message) {
         LOGGER.debug("Notify with message \"{}\"", message);
         try {

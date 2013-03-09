@@ -9,7 +9,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- *
+ * The core of balance checking. It uses {@link Jsoup} class (from <a href="http://jsoup.org/">Jsoup</a> library) for obtaining
+ * the result of POST request to <a href="http://cabinet.telecom.mipt.ru/">http://cabinet.telecom.mipt.ru/</a> 
+ * and parsing.
+ * 
  * @author spitty
  */
 public class BalanceChecker {
@@ -20,11 +23,23 @@ public class BalanceChecker {
     private String login;
     private String password;
 
+    /**
+     * Public constructor store <code>login</code> and <code>password</code>
+     * @param login {@link String} user login
+     * @param password {@link String} user password
+     */
     public BalanceChecker(String login, String password) {
         this.login = login;
         this.password = password;
     }
     
+    /**
+     * Authorizes with given credentials on <a href="http://cabinet.telecom.mipt.ru/">http://cabinet.telecom.mipt.ru/</a>
+     * and returns a {@link Double} value of current balance.
+     * @return
+     * @throws IOException
+     * @throws NumberFormatException 
+     */
     public Double getBalance() throws IOException, NumberFormatException {
         Connection.Response res = Jsoup
                 .connect(ENTER_URL)
