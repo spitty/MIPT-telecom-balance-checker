@@ -8,6 +8,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.text.MessageFormat;
 import java.util.Properties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,6 +35,7 @@ public class BalanceNotifier {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(BalanceNotifier.class);
     private static final String DEFAULT_PROPERTIES_FILE = ".balance_checker/checker.properties";
+    private static final String DEFAULT_FORMAT_STRING = "Current balance is {0,number,#.##}";
     //
     private static final String BALANCE_CHEKER_PROPERTIES_FILE = "balanceChekerPropertiesFile";
     private static final String LOGIN_PROP_KEY = "login";
@@ -48,6 +50,8 @@ public class BalanceNotifier {
     private Properties prop;
     private String propFilename;
     private BalanceChecker balanceChecker;
+    private String formatString;
+    private String login;
 
     public static void main(String[] args) {
         if (args.length == 1 && "--help".equals(args[0])) {
@@ -78,6 +82,7 @@ public class BalanceNotifier {
         prop = new Properties();
         loadProperties();
         balanceChecker = new BalanceChecker(login, password);
+        this.login = login;
     }
 
     public BalanceNotifier(String propFile) {
@@ -189,16 +194,24 @@ public class BalanceNotifier {
     private void notifyAndStore(Double balance, Long currentTime) {
         prop.put(LAST_CHEKED_VALUE_PROP_KEY, String.valueOf(balance));
         prop.put(LAST_CHECK_TIME_PROP_KEY, String.valueOf(currentTime));
-        NotifySender.sendNotification("Current balance : " + balance);
+        NotifySender.sendNotification(MessageFormat.format(formatString, balance, login));
     }
 
     private void initBalanceCheckerWithPropertiesFile() throws IllegalArgumentException {
-        String login = prop.getProperty(LOGIN_PROP_KEY);
+        login = prop.getProperty(LOGIN_PROP_KEY);
         String password = prop.getProperty(PASSWORD_PROP_KEY);
         if (login == null || password == null) {
             LOGGER.error("Please specify login and password by properties in \"{}\"", new File(propFilename).getAbsolutePath());
             throw new IllegalArgumentException("Login or password is not set in \"" + new File(propFilename).getAbsolutePath() + "\"");
         }
         balanceChecker = new BalanceChecker(login, password);
+    }
+
+    public String getFormatString() {
+        return formatString;
+    }
+
+    public void setFormatString(String formatString) {
+        this.formatString = formatString;
     }
 }
