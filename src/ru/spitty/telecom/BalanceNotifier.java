@@ -73,16 +73,30 @@ public class BalanceNotifier {
                 + "          password=XXXXXX");
     }
 
-    public BalanceNotifier() {
+    public BalanceNotifier(String propFile, String login, String password) {
+        propFilename = propFile;
         prop = new Properties();
         loadProperties();
-        String login = prop.getProperty(LOGIN_PROP_KEY);
-        String password = prop.getProperty(PASSWORD_PROP_KEY);
-        if (login == null || password == null) {
-            LOGGER.error("Please specify login and password by properties in \"{}\"", new File(propFilename).getAbsolutePath());
-            throw new IllegalArgumentException("Login or password is not set in \"" + new File(propFilename).getAbsolutePath() + "\"");
-        }
         balanceChecker = new BalanceChecker(login, password);
+    }
+
+    public BalanceNotifier(String propFile) {
+        propFilename = propFile;
+        prop = new Properties();
+        loadProperties();
+        initBalanceCheckerWithPropertiesFile();
+    }
+
+    public BalanceNotifier() {
+        propFilename = System.getProperty(BALANCE_CHEKER_PROPERTIES_FILE);
+        if (propFilename == null) {
+            propFilename = System.getProperty("user.home") + "/" + DEFAULT_PROPERTIES_FILE;
+            LOGGER.info("Property -DbalanceChekerPropertiesFile is not set. Use default file path \"{}\"", propFilename);
+        }
+
+        prop = new Properties();
+        loadProperties();
+        initBalanceCheckerWithPropertiesFile();
     }
 
     /**
@@ -97,11 +111,6 @@ public class BalanceNotifier {
     }
 
     private void loadProperties() {
-        propFilename = System.getProperty(BALANCE_CHEKER_PROPERTIES_FILE);
-        if (propFilename == null) {
-            propFilename = System.getProperty("user.home") + "/" + DEFAULT_PROPERTIES_FILE;
-            LOGGER.info("Property -DbalanceChekerPropertiesFile is not set. Use default file path \"{}\"", propFilename);
-        }
         File propFile = new File(propFilename);
         if (propFile.exists()) {
             try (FileReader fileReader = new FileReader(propFile)) {
@@ -117,7 +126,9 @@ public class BalanceNotifier {
         if (!f.exists()) {
             LOGGER.debug("Properties file absents. Create it {}", f.getAbsolutePath());
             File parent = f.getParentFile();
-            parent.mkdirs();
+            if(parent != null) {
+                parent.mkdirs();
+            }
             f.createNewFile();
         }
         try (FileWriter fw = new FileWriter(f)) {
@@ -179,5 +190,15 @@ public class BalanceNotifier {
         prop.put(LAST_CHEKED_VALUE_PROP_KEY, String.valueOf(balance));
         prop.put(LAST_CHECK_TIME_PROP_KEY, String.valueOf(currentTime));
         NotifySender.sendNotification("Current balance : " + balance);
+    }
+
+    private void initBalanceCheckerWithPropertiesFile() throws IllegalArgumentException {
+        String login = prop.getProperty(LOGIN_PROP_KEY);
+        String password = prop.getProperty(PASSWORD_PROP_KEY);
+        if (login == null || password == null) {
+            LOGGER.error("Please specify login and password by properties in \"{}\"", new File(propFilename).getAbsolutePath());
+            throw new IllegalArgumentException("Login or password is not set in \"" + new File(propFilename).getAbsolutePath() + "\"");
+        }
+        balanceChecker = new BalanceChecker(login, password);
     }
 }
